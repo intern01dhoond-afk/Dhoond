@@ -129,15 +129,15 @@ const Home = () => {
            .video-container { border-radius: 0 !important; box-shadow: none !important; margin-bottom: 2rem; }
            .floating-rating { bottom: -10px !important; left: 50% !important; transform: translateX(-50%) !important; width: 85% !important; padding: 0.75rem 1rem !important; border-radius: 16px !important; box-shadow: 0 12px 36px rgba(0,0,0,0.15) !important; border: 1px solid rgba(255,255,255,0.2); }
            
-           .service-grid-mobile { display: grid !important; grid-template-columns: repeat(4, 1fr) !important; gap: 0.4rem !important; padding: 0 !important; }
-           .service-grid-mobile > div { width: 100% !important; min-height: 105px !important; padding: 0.8rem 0.2rem !important; border-radius: 18px !important; border: 1.5px solid #f1f5f9 !important; }
-           .service-grid-mobile img { width: 40px !important; height: 40px !important; margin-bottom: 4px !important; }
+           .service-grid-mobile { display: grid !important; grid-template-columns: repeat(3, 1fr) !important; gap: 0.6rem !important; padding: 0 !important; }
+           .service-grid-mobile > div { width: 100% !important; min-height: 120px !important; padding: 1.2rem 0.3rem !important; border-radius: 18px !important; border: 1.5px solid #f1f5f9 !important; }
+           .service-grid-mobile img { width: 48px !important; height: 48px !important; margin-bottom: 6px !important; }
            .service-grid-mobile span { font-size: 0.65rem !important; line-height: 1.1 !important; }
            
            .availability-tag { font-size: 6.5px !important; padding: 2px 4px !important; border-radius: 3px !important; margin-top: 3px !important; }
            .painting-highlight { border: 2.5px solid #facc15 !important; background: #fffcf0 !important; }
            
-           .section-pad { padding: 3rem 5% !important; }
+           .section-pad { padding: 1.5rem 5% 3rem !important; }
            .section-pad h2 { font-size: 1.75rem !important; line-height: 1.2 !important; }
            .section-pad p { font-size: 0.85rem !important; }
            .pop-scroll-mobile { padding-left: 5% !important; padding-right: 5% !important; scroll-snap-type: x mandatory; }
@@ -173,7 +173,7 @@ const Home = () => {
       `}</style>
       
       <div style={{ position: 'relative', zIndex: 1 }}>
-        <section className="hero-section" style={{ background: 'linear-gradient(180deg, #f8fafc 0%, #ffffff 100%)', borderBottom: '1px solid #f1f5f9', padding: '1.5rem 5% 4rem' }}>
+        <section className="hero-section" style={{ background: 'linear-gradient(180deg, #f8fafc 0%, #ffffff 100%)', borderBottom: '1px solid #f1f5f9', padding: '1.5rem 5% 1.5rem' }}>
           <div style={{ maxWidth: '1280px', margin: '0 auto' }}>
             <div className="desktop-flex">
               <div className="hero-text">
@@ -224,10 +224,9 @@ const Home = () => {
               <h3 style={{ fontSize: '1.1rem', fontWeight: 800, marginBottom: '1rem' }}>Trusted Commercial & Home Care Services</h3>
               <div className="service-scroll service-grid service-grid-mobile" style={{ display: 'flex', gap: '1.25rem', overflowX: 'auto', paddingBottom: '1rem' }}>
                 {[
-                  { label: 'Painting', img: '/icons/painter.png', cat: 'painter' },
+                  { label: 'Painting', img: '/icons/painter_new.jpg', cat: 'painter' },
                   { label: 'AC Tech', img: '/icons/ac_technician.png', cat: 'technician' },
                   { label: 'RO Tech', img: '/icons/ro_technician.png', cat: 'technician' },
-                  { label: 'Plumber', img: '/icons/plumber.png', cat: 'plumber' },
                   { label: 'Electrician', img: '/icons/electrician.png', cat: 'electrician' },
                   { label: 'Washing Mach.', img: '/icons/washing_machine.png', cat: 'technician' },
                   { label: 'Refrigerator', img: '/icons/refrigerator.png', cat: 'technician' }
@@ -269,7 +268,7 @@ const Home = () => {
           </div>
         </section>
 
-        <section className="section-pad fade-up parallax-bg" style={{ background: 'linear-gradient(180deg, #f8fafc 0%, #fff 100%)', padding: '5rem 5%' }}>
+        <section className="section-pad fade-up parallax-bg" style={{ background: 'linear-gradient(180deg, #f8fafc 0%, #fff 100%)', padding: '3rem 5%' }}>
           <div style={{ maxWidth: '1280px', margin: '0 auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '2.5rem' }}>
               <div>
