@@ -1,7 +1,5 @@
 const authModel = require("../models/auth.model");
-
-// OTP Store for verification
-const otpStore = new Map();
+const { generateCustomToken } = require("../utils/firebaseAdmin");
 
 const sendOtpController = async (req, res) => {
   const digits = String(req.body.phone || '').replace(/\D/g, '').slice(-10);
@@ -43,21 +41,32 @@ const verifyOtpController = async (req, res) => {
   const { phone, otp, name } = req.body;
   const digits = String(phone || '').replace(/\D/g, '').slice(-10);
   
-  const stored = otpStore.get(digits);
-  
-  // Check if OTP exists and matches exactly, and hasn't expired
-  const isMatch = stored && stored.otp === String(otp).trim() && stored.expiry > Date.now();
+  // Use database to verify
+  const isMatch = await authModel.verifyAndDeleteOtp(digits, otp);
 
   if (!isMatch) {
     return res.status(400).json({ error: "Incorrect or expired OTP." });
   }
   
-  // Clear OTP from store after successful verification
-  otpStore.delete(digits);
-  
   try {
     const user = await authModel.upsertUser(digits, name);
-    res.json({ success: true, user: { id: user.id, name: user.name, mobile: user.phone, role: user.role } });
+    
+    // Generate Firebase Custom Token using the user's phone/id as UID
+    let firebaseToken = null;
+    try {
+      firebaseToken = await generateCustomToken(`user_${user.id}`, { 
+        mobile: user.phone,
+        role: user.role 
+      });
+    } catch (e) {
+      console.warn('[Auth] Firebase token generation skipped (likely missing config).');
+    }
+
+    res.json({ 
+      success: true, 
+      user: { id: user.id, name: user.name, mobile: user.phone, role: user.role },
+      token: firebaseToken 
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

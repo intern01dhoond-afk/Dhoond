@@ -62,6 +62,7 @@ const Checkout = () => {
   const [tempTime, setTempTime] = useState('');
 
   // Payment State
+  const [status, setStatus] = useState('idle'); // idle, booking, payment, success
   const [selectedPayment, setSelectedPayment] = useState('upi'); // upi, card, netbanking
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [avoidCalling, setAvoidCalling] = useState(true);
@@ -237,53 +238,68 @@ const Checkout = () => {
       return;
     }
 
-    const options = {
-      key: import.meta.env.VITE_RAZORPAY_KEY_ID || "rzp_test_Sdh2WaT4aYxo9E", // Use real key from .env
-      amount: Math.round(finalAmountToPay * 100), // Amount is in currency subunits. Default currency is INR.
-      currency: "INR",
-      name: "Dhoond Services",
-      description: "Service Booking Transaction",
-      image: "/vite.svg", 
-      handler: function (response) {
-        // Payment Success Handler
-        processFinalBooking(response.razorpay_payment_id);
-      },
-      prefill: {
-        name: user?.name || "Customer",
-        email: user?.email || "customer@example.com",
-        contact: user?.mobile || formData.phone || tempPhone
-      },
-      theme: {
-        color: "#6e42e5"
-      },
-      config: {
-        display: {
-          blocks: {
-            banks: {
-              name: 'Pay via UPI / QR',
-              instruments: [
-                {
-                  method: 'upi'
-                }
-              ]
-            }
-          },
-          sequence: ['block.banks', 'method.card', 'method.netbanking'],
-          preferences: {
-            show_default_blocks: true // Restored to true to prevent "No method found" error
-          }
-        }
+    if (finalAmountToPay <= 0) {
+      setPaymentError('Invalid payment amount. Please add items to your cart.');
+      setStatus('idle');
+      return;
+    }
+
+    setStatus('booking'); // Show loading state
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+
+    try {
+      // 1. Create Order on Backend
+      console.log("[Checkout] Creating Razorpay Order...");
+      const orderRes = await fetch(`${apiUrl}/api/V1/payments/razorpay-order`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount: finalAmountToPay }),
+      });
+      const orderData = await orderRes.json();
+      
+      if (!orderRes.ok || !orderData.order_id) {
+        throw new Error(orderData.message || 'Failed to create payment order');
       }
-    };
 
-    const rzp = new window.Razorpay(options);
-    
-    rzp.on('payment.failed', function (response){
-       setPaymentError(response.error.description || 'Payment Failed');
-       setStatus('idle');
-    });
+      console.log("[Checkout] Order Created:", orderData.order_id);
 
-    rzp.open();
+      // 2. Open Razorpay with the Order ID
+      const options = {
+        key: import.meta.env.VITE_RAZORPAY_KEY_ID || "rzp_test_Sdh2WaT4aYxo9E",
+        amount: Math.round(finalAmountToPay * 100),
+        currency: "INR",
+        name: "Dhoond Services",
+        description: "Service Booking Transaction",
+        image: "https://dhoond.vercel.app/vite.svg",
+        order_id: orderData.order_id, // IMPORTANT: Link the order
+        handler: function (response) {
+          processFinalBooking(response.razorpay_payment_id);
+        },
+        prefill: {
+          name: user?.name || "Customer",
+          email: user?.email || "customer@example.com",
+          contact: String(user?.mobile || formData.phone || tempPhone).replace(/\D/g, '').slice(-10)
+        },
+        theme: {
+          color: "#6e42e5"
+        },
+        notes: {
+          category: checkoutCategory || 'general'
+        }
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.on('payment.failed', function (response){
+         console.error("[Razorpay] Payment Failed:", response.error);
+         setPaymentError(response.error.description || 'Payment Failed');
+         setStatus('idle');
+      });
+      rzp.open();
+    } catch (err) {
+      console.error("[Razorpay] Init Error:", err);
+      setPaymentError(err.message || "Could not initialize payment gateway.");
+      setStatus('idle');
+    }
   };
 
   const handleBook = () => {
@@ -365,7 +381,7 @@ const Checkout = () => {
         email: data.user?.email || '',
         role: data.user?.role || 'user',
         created_at: data.user?.created_at || new Date().toISOString(),
-      });
+      }, data.token);
       setFormData(prev => ({ ...prev, phone: tempPhone }));
       setIsAuthModalOpen(false);
       setOtpError('');
@@ -660,25 +676,48 @@ const Checkout = () => {
                <button
                  id="proceed-to-pay-btn"
                  onClick={() => {
+                   if (status === 'booking' || status === 'payment') return;
                    if (!selectedDate || !selectedTime) {
                      alert('Please select a date and time slot first.');
                      return;
                    }
                    handleBook();
                  }}
+                 disabled={status === 'booking' || status === 'payment'}
                  style={{
-                   width: '100%', background: 'linear-gradient(135deg, #6e42e5 0%, #4f29c8 100%)',
+                   width: '100%', background: (status === 'booking' || status === 'payment') ? '#cbd5e1' : 'linear-gradient(135deg, #6e42e5 0%, #4f29c8 100%)',
                    color: '#fff', padding: '1.25rem', borderRadius: '14px', border: 'none',
-                   fontWeight: 800, fontSize: '1.1rem', cursor: 'pointer',
-                   boxShadow: '0 8px 25px rgba(110,66,229,0.35)',
+                   fontWeight: 800, fontSize: '1.1rem', cursor: (status === 'booking' || status === 'payment') ? 'not-allowed' : 'pointer',
+                   boxShadow: (status === 'booking' || status === 'payment') ? 'none' : '0 8px 25px rgba(110,66,229,0.35)',
                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem',
-                   transition: 'all 0.2s'
+                   transition: 'all 0.2s', position: 'relative'
                  }}
-                 onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'}
-                 onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
                >
-                 <CreditCard size={20} /> Proceed to Pay • ₹{finalAmountToPay.toFixed(0)}
+                 {(status === 'booking' || status === 'payment') ? (
+                   <>
+                     <div className="spinner-small" style={{
+                       width: '18px', height: '18px', border: '3px solid rgba(255,255,255,0.3)',
+                       borderTopColor: '#fff', borderRadius: '50%', animation: 'spin 0.8s linear infinite'
+                     }}></div>
+                     Processing...
+                   </>
+                 ) : (
+                   <>
+                     <CreditCard size={20} /> Proceed to Pay • ₹{finalAmountToPay.toFixed(0)}
+                   </>
+                 )}
                </button>
+               
+               <style>{`
+                 @keyframes spin { to { transform: rotate(360deg); } }
+               `}</style>
+
+               {paymentError && (
+                 <div style={{ marginTop: '1rem', padding: '0.75rem', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '10px', color: '#b91c1c', fontSize: '0.85rem', fontWeight: 600, textAlign: 'center' }}>
+                   {paymentError}
+                 </div>
+               )}
+               
                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', marginTop: '1rem', color: '#94a3b8', fontSize: '0.78rem', fontWeight: 600 }}>
                  <ShieldCheck size={13} /> Secured by Razorpay
                </div>
@@ -948,6 +987,13 @@ const Checkout = () => {
                 </div>
               ))}
             </div>
+
+            {/* Payment Error Banner */}
+            {paymentError && (
+              <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '12px', padding: '1rem', color: '#991b1b', fontSize: '0.85rem', fontWeight: 600, marginBottom: '1rem', textAlign: 'center' }}>
+                {paymentError}
+              </div>
+            )}
 
             {/* Pay Now button */}
             <button
