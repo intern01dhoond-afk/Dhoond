@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { ChevronRight } from 'lucide-react';
 import PaintingServiceList from '../components/PaintingServiceList';
 
@@ -19,9 +19,26 @@ const isTouch = () => typeof window !== 'undefined' && ('ontouchstart' in window
 
 export default function Painting() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [galleryActive, setGalleryActive] = useState('after');
   const [activeService, setActiveService] = useState('Painting');
   const [selectedService, setSelectedService] = useState(null);
+  
+  // Sync URL Params -> Local Modal State
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const sTitle = params.get('service');
+    if (sTitle) {
+      setSelectedService({
+        title: sTitle,
+        p: params.get('sub') || '',
+        filter: params.get('filter') || ''
+      });
+    } else {
+      setSelectedService(null);
+    }
+  }, [location.search]);
+
   const cursorRef = useRef(null);
   const followerRef = useRef(null);
   const cleanupRef = useRef([]);
@@ -105,7 +122,7 @@ export default function Painting() {
 
       if (reducedMotion) {
         // Skip complex animations — just make everything visible
-        document.querySelectorAll('.p-hero-badge,.p-line-inner,.p-hero-sub,.p-service-selector,.p-hero-actions,.p-hero-rating,.p-hero-media,.p-service-item,.gitem,.process-card,.p-tcard,.p-stat,#p-introText,#p-iimg1,#p-iimg2,.p-why-img-wrap,.p-why-text,#p-ctaEl').forEach(el => {
+        document.querySelectorAll('.p-hero-badge,.p-line-inner,.p-hero-sub,.p-service-selector,.p-hero-actions,.p-hero-rating,.p-hero-media,.p-service-item,.gitem,.process-card,.p-tcard,.p-stat,#p-introText,#p-iimg1,#p-iimg2,.p-why-text,#p-ctaEl').forEach(el => {
           if (el) { el.style.opacity = '1'; el.style.transform = 'none'; }
         });
       } else {
@@ -168,14 +185,10 @@ export default function Painting() {
         ScrollTrigger.create({ trigger: '#p-testSec', start: 'top 82%', onEnter: () => gsap.to('.p-tcard', { opacity: 1, y: 0, stagger: .1, duration: .75, ease: 'power3.out' }) });
 
         /* ── Why ── */
-        if (!touch) {
-          gsap.to('#p-whyImgP', { y: '-18%', ease: 'none', scrollTrigger: { trigger: '#p-whySec', start: 'top bottom', end: 'bottom top', scrub: 1.3 } });
-        }
         ScrollTrigger.create({
           trigger: '#p-whySec', start: 'top 80%',
           onEnter: () => {
-            gsap.to('.p-why-img-wrap', { opacity: 1, x: 0, duration: .9, ease: 'power3.out' });
-            gsap.to('.p-why-text', { opacity: 1, x: 0, duration: .9, delay: .12, ease: 'power3.out' });
+            gsap.to('.p-why-text', { opacity: 1, y: 0, duration: .9, ease: 'power3.out' });
           }
         });
 
@@ -478,24 +491,24 @@ export default function Painting() {
 
         /* ── WHY ── */
         .p-why { padding: 80px 5vw; background: #fff; }
-        .p-why-inner { display: flex; flex-direction: column; gap: 60px; }
-        .p-why-img-wrap { border-radius: 28px; overflow: hidden; aspect-ratio: 1/1; position: relative; opacity: 0; transform: translateX(-28px); box-shadow: 0 32px 64px rgba(0,0,0,0.14); max-width: 440px; margin: 0 auto; width: 100%; will-change: transform; }
-        .p-why-img-para { position: absolute; width: 100%; height: 100%; top: 0; background: linear-gradient(145deg, #2B2B2B, #1a1a1a); display: flex; align-items: flex-end; justify-content: center; }
-        .p-why-text { opacity: 0; transform: translateX(28px); will-change: transform; }
-        .p-why-text h2 { font-family: 'Inter', sans-serif; font-size: clamp(28px, 4.5vw, 44px); font-weight: 900; line-height: 1.2; color: #1a1a1a; margin-bottom: 32px; }
-        .p-wlist { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
-        .p-witem { display: flex; flex-direction: column; gap: 14px; }
+        .p-why-inner { display: flex; flex-direction: column; gap: 40px; max-width: 1100px; margin: 0 auto; text-align: center; }
+        .p-why-text { opacity: 0; transform: translateY(28px); will-change: transform; }
+        .p-why-text h2 { font-family: 'Inter', sans-serif; font-size: clamp(28px, 4.5vw, 44px); font-weight: 900; line-height: 1.2; color: #1a1a1a; margin-bottom: 48px; }
+        .p-wlist { display: grid; grid-template-columns: 1fr; gap: 32px; text-align: left; }
+        .p-witem { display: flex; flex-direction: column; gap: 14px; align-items: center; text-align: center; }
         .p-wdot { width: 44px; height: 44px; border-radius: 12px; background: rgba(196,130,90,0.1); display: flex; align-items: center; justify-content: center; transition: all .3s; }
         .p-witem:hover .p-wdot { background: #C4825A; transform: scale(1.08) rotate(6deg); }
         .p-wdot svg { width: 20px; height: 20px; stroke: #2563eb; fill: none; stroke-width: 1.5; transition: stroke .3s; }
         .p-witem:hover .p-wdot svg { stroke: #fff; }
-        .p-wtext h4 { font-size: 14px; font-weight: 600; color: #2B2B2B; margin-bottom: 4px; }
-        .p-wtext p { font-size: 13px; color: #777; line-height: 1.6; font-weight: 300; margin: 0; }
-        @media (min-width: 860px) {
+        .p-wtext h4 { font-size: 15px; font-weight: 700; color: #2B2B2B; margin-bottom: 6px; }
+        .p-wtext p { font-size: 14px; color: #777; line-height: 1.6; font-weight: 400; margin: 0; max-width: 260px; }
+        
+        @media (min-width: 600px) {
+          .p-wlist { grid-template-columns: 1fr 1fr; }
+        }
+        @media (min-width: 900px) {
           .p-why { padding: 120px 5vw; }
-          .p-why-inner { flex-direction: row; align-items: center; gap: 80px; }
-          .p-why-img-wrap { flex: 0 0 46%; max-width: none; margin: 0; }
-          .p-why-text { flex: 1; }
+          .p-wlist { grid-template-columns: repeat(4, 1fr); gap: 24px; }
         }
 
         /* ── CTA ── */
@@ -597,7 +610,7 @@ export default function Painting() {
                   className={`p-sel-btn${activeService === s.n ? ' active' : ''}`}
                   onClick={() => {
                     setActiveService(s.n);
-                    setSelectedService({ title: s.n, p: s.p });
+                    navigate(`?service=${encodeURIComponent(s.n)}&sub=${encodeURIComponent(s.p)}`);
                   }}
                   aria-pressed={activeService === s.n}
                 >
@@ -608,7 +621,7 @@ export default function Painting() {
             </div>
 
             <div className="p-hero-actions">
-              <button onClick={() => setSelectedService({ title: 'Book your Consultation', p: 'Talk to an expert' })} className="p-btn-primary">
+              <button onClick={() => navigate(`?service=${encodeURIComponent('Book your Consultation')}&sub=${encodeURIComponent('Talk to an expert')}`)} className="p-btn-primary">
                 <span className="p-btn-fill" />
                 <span>Book a consultant</span>
                 <svg viewBox="0 0 24 24" stroke="currentColor" fill="none" width="15" height="15" strokeWidth="2"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z" /></svg>
@@ -649,7 +662,7 @@ export default function Painting() {
             { img: '/grill_gate.png',          title: 'Specialty Coatings',     sub: 'Epoxy & protective finishes for Grills, Gates & Doors', filter: 'coatings'     },
           ].map(s => (
             <div key={s.title} className="p-service-item" role="listitem" style={{ cursor: 'pointer' }} onClick={() => {
-              setSelectedService({ title: s.title, p: s.sub, filter: s.filter });
+              navigate(`?service=${encodeURIComponent(s.title)}&sub=${encodeURIComponent(s.sub)}&filter=${s.filter}`);
             }}>
               <div className="p-si-img">
                 <img src={s.img} alt={s.title} />
@@ -801,11 +814,6 @@ export default function Painting() {
         {/* ── WHY ── */}
         <section className="p-why" id="p-whySec">
           <div className="p-why-inner">
-            <div className="p-why-img-wrap">
-              <div className="p-why-img-para" id="p-whyImgP">
-                <img loading="lazy" src="/website_ui.webp" alt="Dhoond App Preview" style={{ width: '90%', transform: 'translateX(5%) translateY(2%)', filter: 'drop-shadow(0 24px 40px rgba(0,0,0,0.4))' }} />
-              </div>
-            </div>
             <div className="p-why-text">
               <span className="p-eyebrow">Why Dhoond</span>
               <h2>Affordable Painting Without Compromising Quality</h2>
@@ -843,7 +851,7 @@ export default function Painting() {
 
 
         <div className="mobile-sticky-cta" role="complementary" aria-label="Book now">
-          <button onClick={() => setSelectedService({ title: 'Book your Consultation', p: 'Talk to an expert' })} className="mobile-sticky-cta-call" style={{ width: '100%', margin: 0, border: 'none', background: '#facc15' }}>
+          <button onClick={() => navigate(`?service=${encodeURIComponent('Book your Consultation')}&sub=${encodeURIComponent('Talk to an expert')}`)} className="mobile-sticky-cta-call" style={{ width: '100%', margin: 0, border: 'none', background: '#facc15' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                <div style={{ width: '42px', height: '42px', background: 'rgba(0,0,0,0.1)', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                  <svg viewBox="0 0 24 24" stroke="#111" fill="none" width="20" height="20" strokeWidth="2.5"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z" /></svg>
@@ -865,7 +873,7 @@ export default function Painting() {
       {selectedService && (
         <PaintingServiceList 
           service={selectedService} 
-          onClose={() => setSelectedService(null)} 
+          onClose={() => navigate(location.pathname)} 
         />
       )}
     </>
