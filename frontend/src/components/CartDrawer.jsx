@@ -39,7 +39,7 @@ const CartDrawer = () => {
             <div style={{ textAlign: 'center', color: 'var(--text-muted)', marginTop: '3rem' }}>
               <ShoppingBag size={48} style={{ opacity: 0.2, margin: '0 auto 1rem' }} />
               <p>Your cart is empty.</p>
-              <button className="btn-outline" style={{ marginTop: '1rem' }} onClick={() => {setIsCartOpen(false); navigate('/shop');}}>
+              <button className="btn-outline" style={{ marginTop: '1rem' }} onClick={() => { setIsCartOpen(false); navigate('/shop'); }}>
                 Browse Services
               </button>
             </div>
@@ -52,7 +52,7 @@ const CartDrawer = () => {
                 <div style={{ flex: 1 }}>
                   <h4 style={{ fontWeight: 600, marginBottom: '0.25rem' }}>{item.title}</h4>
                   <div style={{ color: 'var(--primary)', fontWeight: 700, marginBottom: '0.5rem' }}>₹{item.discountPrice}</div>
-                  
+
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', background: 'var(--bg-card)', borderRadius: '99px', padding: '0.25rem 0.5rem' }}>
                       <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-main)', display: 'flex' }} onClick={() => updateQuantity(item.id, -1)}>
